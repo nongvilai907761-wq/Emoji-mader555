@@ -3,286 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emoji Contra - Mars Mission</title>
+    <title>ดาวน์โหลดแอปพลิเคชัน</title>
     <style>
         body {
-            margin: 0;
-            background-color: #1a0f0a;
-            color: white;
             font-family: sans-serif;
             text-align: center;
-            overflow: hidden;
+            padding-top: 50px;
+            background-color: #f4f4f9;
         }
-        canvas {
-            background: linear-gradient(to bottom, #4a1505, #8c2703, #b8410b);
-            display: block;
-            margin: 0 auto;
-            border-bottom: 4px solid #331100;
-        }
-        #ui {
-            padding: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            background: #111;
-        }
-        .controls {
-            margin-top: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 5px;
-            cursor: pointer;
-            background: #ff4500;
+        .download-btn {
+            display: inline-block;
+            background-color: #28a745;
             color: white;
-            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            text-decoration: none;
             border-radius: 5px;
+            font-weight: bold;
         }
-        button:active {
-            background: #cc3700;
+        .download-btn:hover {
+            background-color: #218838;
         }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        ด่าน: <span id="stageText">1</span> | คะแนน: <span id="scoreText">0</span> | พลังชีวิต: <span id="hpText">❤️❤️❤️</span>
-    </div>
+    <h1>ดาวน์โหลดแอปของเราที่นี่</h1>
+    <p>กดปุ่มด้านล่างเพื่อดาวน์โหลดไฟล์ APK ลงในมือถือของคุณ</p>
     
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
-
-    <div class="controls">
-        <button onclick="moveLeft()">⬅️ ซ้าย</button>
-        <button onclick="jump()">⬆️ กระโดด</button>
-        <button onclick="shoot()">🔫 ยิง</button>
-        <button onclick="moveRight()">➡️ ขวา</button>
-    </div>
-
-<script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    let stage = 1;
-    let score = 0;
-    let hp = 3;
-    let isGameOver = false;
-
-    // ผู้เล่น (อีโมจิมีแขนขาถือปืน 🏃‍♂️🔫)
-    let player = {
-        x: 50,
-        y: 280,
-        width: 40,
-        height: 40,
-        vx: 0,
-        vy: 0,
-        speed: 4,
-        jumpPower: -10,
-        isJumping: false,
-        facing: 1 // 1 = ขวา, -1 = ซ้าย
-    };
-
-    let bullets = [];
-    let enemies = [];
-    let rocks = []; // ก้อนหินบนดาวอังคาร
-
-    // สร้างฉากด่าน
-    function initStage() {
-        bullets = [];
-        enemies = [];
-        rocks = [];
-
-        // สร้างก้อนหินบนดาวอังคาร
-        let rockCount = stage === 1 ? 5 : 8;
-        for (let i = 0; i < rockCount; i++) {
-            rocks.push({
-                x: 200 + i * 130 + Math.random() * 50,
-                y: 320,
-                width: 50,
-                height: 30
-            });
-        }
-
-        // สร้างศัตรูในด่าน
-        let enemyCount = stage === 1 ? 4 : 7;
-        for (let i = 0; i < enemyCount; i++) {
-            enemies.push({
-                x: 400 + i * 180,
-                y: 290,
-                width: 40,
-                height: 40,
-                vx: -1 - stage * 0.5,
-                hp: stage
-            });
-        }
-    }
-
-    function moveLeft() {
-        player.x -= 15;
-        player.facing = -1;
-        if (player.x < 0) player.x = 0;
-    }
-
-    function moveRight() {
-        player.x += 15;
-        player.facing = 1;
-        if (player.x > canvas.width - 40) player.x = canvas.width - 40;
-    }
-
-    function jump() {
-        if (!player.isJumping) {
-            player.vy = player.jumpPower;
-            player.isJumping = true;
-        }
-    }
-
-    function shoot() {
-        bullets.push({
-            x: player.x + (player.facing === 1 ? 40 : -10),
-            y: player.y + 15,
-            vx: player.facing * 8,
-            width: 10,
-            height: 5
-        });
-    }
-
-    // อัปเดตเกม
-    function update() {
-        if (isGameOver) return;
-
-        // แรงโน้มถ่วงกระทำต่อผู้เล่น
-        player.vy += 0.5;
-        player.y += player.vy;
-
-        // พื้นดิน
-        if (player.y > 280) {
-            player.y = 280;
-            player.vy = 0;
-            player.isJumping = false;
-        }
-
-        // อัปเดตกระสุนผู้เล่น
-        for (let i = bullets.length - 1; i >= 0; i--) {
-            bullets[i].x += bullets[i].vx;
-            if (bullets[i].x > canvas.width || bullets[i].x < 0) {
-                bullets.splice(i, 1);
-            }
-        }
-
-        // อัปเดตศัตรู
-        for (let i = enemies.length - 1; i >= 0; i--) {
-            enemies[i].x += enemies[i].vx;
-
-            // ชนขอบวนกลับมา
-            if (enemies[i].x < 0 || enemies[i].x > canvas.width) {
-                enemies[i].vx *= -1;
-            }
-
-            // เช็คกระสุนโดนศัตรู
-            for (let j = bullets.length - 1; j >= 0; j--) {
-                if (
-                    bullets[j] &&
-                    bullets[j].x < enemies[i].x + enemies[i].width &&
-                    bullets[j].x + bullets[j].width > enemies[i].x &&
-                    bullets[j].y < enemies[i].y + enemies[i].height &&
-                    bullets[j].y + bullets[j].height > enemies[i].y
-                ) {
-                    enemies[i].hp--;
-                    bullets.splice(j, 1);
-                    if (enemies[i].hp <= 0) {
-                        enemies.splice(i, 1);
-                        score += 100;
-                        break;
-                    }
-                }
-            }
-
-            // เช็คศัตรูชนผู้เล่น
-            if (
-                enemies[i] &&
-                player.x < enemies[i].x + enemies[i].width &&
-                player.x + player.width > enemies[i].x &&
-                player.y < enemies[i].y + enemies[i].height &&
-                player.y + player.height > enemies[i].y
-            ) {
-                hp--;
-                enemies.splice(i, 1);
-                if (hp <= 0) {
-                    isGameOver = true;
-                }
-            }
-        }
-
-        // เช็คผ่านด่าน (ศัตรูหมด)
-        if (enemies.length === 0) {
-            if (stage === 1) {
-                stage = 2;
-                initStage();
-                player.x = 50;
-            } else {
-                isGameOver = true; // ชนะเกม
-            }
-        }
-
-        document.getElementById("scoreText").innerText = score;
-        document.getElementById("hpText").innerText = "❤️".repeat(Math.max(0, hp));
-        document.getElementById("stageText").innerText = stage;
-    }
-
-    // วาดกราฟิก
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // วาดฉากหลังดาวอังคาร (ภูเขาไฟ/พื้นผิว)
-        ctx.fillStyle = "#3d1202";
-        ctx.fillRect(0, 320, canvas.width, 80);
-
-        // วาดก้อนหินบนดาวอังคาร
-        ctx.fillStyle = "#5c2c16";
-        rocks.forEach(rock => {
-            ctx.beginPath();
-            ctx.roundRect(rock.x, rock.y, rock.width, rock.height, [8, 8, 0, 0]);
-            ctx.fill();
-        });
-
-        // วาดผู้เล่น (อีโมจิมีแขนขาถือปืน 🏃‍♂️🔫)
-        ctx.font = "32px Arial";
-        ctx.fillText("🏃‍♂️🔫", player.x, player.y + 30);
-
-        // วาดกระสุน
-        ctx.fillStyle = "#ffff00";
-        bullets.forEach(b => {
-            ctx.fillRect(b.x, b.y, b.width, b.height);
-        });
-
-        // วาดศัตรูเอเลี่ยน
-        ctx.font = "32px Arial";
-        enemies.forEach(e => {
-            ctx.fillText("👾", e.x, e.y + 30);
-        });
-
-        // หน้าจอจบเกม / ชนะเกม
-        if (isGameOver) {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "white";
-            ctx.font = "30px Arial";
-            ctx.textAlign = "center";
-            let msg = hp > 0 ? "🎉 ผ่านภารกิจดาวอังคารสำเร็จ! 🎉" : "💥 เกมจบแล้ว! แพ้แล้ว 💥";
-            ctx.fillText(msg, canvas.width / 2, canvas.height / 2);
-        }
-    }
-
-    function loop() {
-        update();
-        draw();
-        if (!isGameOver) {
-            requestAnimationFrame(loop);
-        }
-    }
-
-    initStage();
-    loop();
-</script>
+    <!-- เปลี่ยน URL ด้านล่างให้เป็นลิงก์ดิบ (Raw Link) ของไฟล์ APK ที่คุณอัปโหลดไว้ -->
+    <a href="ใส่ลิงก์ดิบของไฟล์APK_ตรงนี้" class="download-btn">ดาวน์โหลด APK</a>
 
 </body>
 </html>
